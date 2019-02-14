@@ -14,7 +14,6 @@ import (
 	"time"
 	"io"
 	"io/ioutil"
-	"golang.org/x/oauth2"
 	"bytes"
 	"strconv"
 	"encoding/json"
@@ -105,32 +104,6 @@ func GetPublicObject() {
 	io.Copy(os.Stdout, response.Body)
 }
 
-func GetToken(scope string) *oauth2.Token {
-	ctx := context.Background()
-	//google.CredentialsFromJSON(ct)
-	//scopes := []string{"https://www.googleapis.com/auth/devstorage.read_only"}
-	//credentials,err:=google.FindDefaultCredentials(ctx,scopes...)
-	//if err!=nil{
-	//	panic(err)
-	//}
-	file, err := os.Open("/Users/unity/.gcp/gcs/gcs.json")
-	if err != nil {
-		panic(err)
-	}
-	b, err := ioutil.ReadAll(file)
-	if err != nil {
-		panic(err)
-	}
-	credentials, err := google.CredentialsFromJSON(ctx, b, scope)
-	token, err := credentials.TokenSource.Token()
-	if err != nil {
-		panic(err)
-	}
-	//fmt.Println(token)
-	//fmt.Println(token.AccessToken)
-	//fmt.Println(token.TokenType)
-	return token
-}
 func GetPrivateObject() {
 	//bucket:="harryhare"
 	url := "https://www.googleapis.com/storage/v1/b/harryhare/o/kitten2.png"
@@ -156,21 +129,14 @@ type FileMeta struct {
 	Name string `json:"name"`
 }
 
-func CreateResumableUpload() string {
-
-	filePath := "/Users/unity/git/gcs_upload/kitten.png"
-	b, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		panic(err)
-	}
-
+func CreateResumableUpload(length int64) string {
 	url := "https://www.googleapis.com/upload/storage/v1/b/harryhare/o?uploadType=resumable&name=test1.png"
 	token := GetToken(storage.ScopeReadWrite)
 
 	request, err := http.NewRequest(http.MethodPost, url, nil)
 	request.Header.Add("Authorization", fmt.Sprintf("%s %s", "Bearer", token.AccessToken))
 	request.Header.Add("X-Upload-Content-Type", "image/png")
-	request.Header.Add("X-Upload-Content-Length", strconv.Itoa(len(b)))
+	request.Header.Add("X-Upload-Content-Length", strconv.FormatInt(length, 10))
 	if err != nil {
 		fmt.Println("new quest error")
 		panic(err)
@@ -189,11 +155,11 @@ func CreateResumableUpload() string {
 
 func CreateResumableUploadWithBody(length int64) string {
 
-	url := "https://www.googleapis.com/upload/storage/v1/b/harryhare/o?uploadType=resumable"
+	url := "https://www.googleapis.com/upload/storage/v1/b/harryhare/o?uploadType=resumable&name=test/test24.jpg"
 	token := GetToken(storage.ScopeReadWrite)
 
 	meta := &FileMeta{
-		Name: "test20.jpg",
+		Name: "test/test24.jpg",
 	}
 	shared.DumpJson(meta)
 	bodyBytes, err := json.Marshal(meta)
@@ -220,6 +186,7 @@ func CreateResumableUploadWithBody(length int64) string {
 	}
 	fmt.Println(response.StatusCode)
 	fmt.Println(response.Header.Get("Location"))
+	fmt.Printf("header:%s\n",response.Header)
 	io.Copy(os.Stdout, response.Body)
 	return response.Header.Get("Location")
 }
@@ -304,7 +271,7 @@ func PutResumableUpload(url string, start, end, total int64, reader io.Reader) {
 
 func SimpleUpload() {
 	filePath := "/Users/unity/git/gcs_upload/kitten.png"
-	url := "https://www.googleapis.com/upload/storage/v1/b/harryhare/o?uploadType=media&name=mykitten3.png"
+	url := "https://www.googleapis.com/upload/storage/v1/b/harryhare/o?uploadType=media&name=test/mykitten3.png"
 	b, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		panic(err)
@@ -396,6 +363,7 @@ func main() {
 
 	//implicit()
 	//explicit("/Users/unity/.gcp/gcs/gcs.json","gcs-test-230118")
+	//SimpleUpload()
 	//GetPrivateObject()
 	//GetPublicObject()
 	UploadTest()
