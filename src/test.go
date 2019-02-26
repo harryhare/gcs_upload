@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"gitlab.internal.unity3d.com/unity-connect/connect/server/shared"
 	"io"
+	"net/url"
+	"strconv"
 )
 
 func testToken() {
@@ -102,13 +104,13 @@ func testResumableUpload() {
 		panic(err)
 	}
 
-	start, err = gcs_restful.GetResumableStatus(ctx, url)
+	status, err := gcs_restful.GetResumableStatus(ctx, url)
 	fmt.Printf("status:%d,%v\n", start, err)
 	if err != nil {
 		panic(err)
 	}
 
-	err = gcs_restful.PutResumableUpload(ctx, url, start, upload.Length, upload.Length, upload.Reader)
+	err = gcs_restful.PutResumableUpload(ctx, url, status.Start, upload.Length, upload.Length, upload.Reader)
 	shared.DumpJson(err)
 	if err != nil {
 		panic(err)
@@ -163,8 +165,24 @@ func testACL() {
 	}
 }
 func main() {
+
+	xx:="test/111.png"
+	xx=url.QueryEscape(xx)
+	fmt.Println(xx)
+	fmt.Println(url.QueryEscape("https://www.test.com/test?query=猪"))
+	fmt.Println(url.PathEscape("https://www.test.com/test?query=猪"))
+
+	fmt.Println(url.ParseQuery("a=111&b=222"))
+	fmt.Println(url.ParseQuery("https://test.com/query?a=111&b=222"))
+
+
+	f:=123.2
+	fmt.Println(int64(f))
+
+	i, _ := strconv.ParseFloat("1234", 64)
+	fmt.Println(i)
 	//testToken()
-	testResumableUpload()
+	//testResumableUpload()
 	//testDeleteResumableUpload()
 	//testACL()
 

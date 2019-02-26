@@ -20,10 +20,41 @@ import (
 	"gitlab.internal.unity3d.com/unity-connect/connect/server/shared"
 	"strings"
 	"regexp"
+	"golang.org/x/oauth2"
 )
 
 const project_id = "gcs-test-230118"
 const bucket = "harryhare"
+
+
+func GetToken(scope string) *oauth2.Token {
+	ctx := context.Background()
+	//google.CredentialsFromJSON(ct)
+	//scopes := []string{"https://www.googleapis.com/auth/devstorage.read_only"}
+	//credentials,err:=google.FindDefaultCredentials(ctx,scopes...)
+	//if err!=nil{
+	//	panic(err)
+	//}
+	file, err := os.Open("/Users/unity/.gcp/gcs/gcs.json")
+	if err != nil {
+		panic(err)
+	}
+	b, err := ioutil.ReadAll(file)
+	if err != nil {
+		panic(err)
+	}
+	credentials, err := google.CredentialsFromJSON(ctx, b, scope)
+	token, err := credentials.TokenSource.Token()
+	if err != nil {
+		panic(err)
+	}
+	//fmt.Println(token)
+	//fmt.Println(token.AccessToken)
+	//fmt.Println(token.TokenType)
+	return token
+}
+
+
 
 // explicit reads credentials from the specified path.
 func explicit(jsonPath, projectID string) {
@@ -270,8 +301,8 @@ func PutResumableUpload(url string, start, end, total int64, reader io.Reader) {
 }
 
 func SimpleUpload() {
-	filePath := "/Users/unity/git/gcs_upload/kitten.png"
-	url := "https://www.googleapis.com/upload/storage/v1/b/harryhare/o?uploadType=media&name=test/mykitten3.png"
+	filePath := "/Users/unity/git/gcs_upload/frag_bunny.mp4"
+	url := "https://www.googleapis.com/upload/storage/v1/b/harryhare/o?uploadType=media&name=test/video.mp4"
 	b, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		panic(err)
@@ -284,7 +315,7 @@ func SimpleUpload() {
 		panic(err)
 	}
 	request.Header.Add("Authorization", fmt.Sprintf("%s %s", "Bearer", token.AccessToken))
-	request.Header.Add("Content-Type", "image/png")
+	request.Header.Add("Content-Type", "image/mp4")
 	request.Header.Add("Content-Length", strconv.Itoa(len(b)))
 	client := http.Client{Timeout: time.Hour}
 	response, err := client.Do(request)
@@ -363,9 +394,9 @@ func main() {
 
 	//implicit()
 	//explicit("/Users/unity/.gcp/gcs/gcs.json","gcs-test-230118")
-	//SimpleUpload()
+	SimpleUpload()
 	//GetPrivateObject()
 	//GetPublicObject()
-	UploadTest()
+	//UploadTest()
 	//DeleteTest()
 }
